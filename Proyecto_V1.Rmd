@@ -1,0 +1,134 @@
+---
+title: "Proyecto Malla de backup"
+author: "Jhon Alejandro Ospina Romero"
+date: "12/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+###library
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(readxl)
+origen_de_datos <- read_excel("~/Documents/Universidad/Diplomado analisis de datos/origen_de_datos.xlsx")
+View(origen_de_datos)
+```
+
+## Contexto
+
+El servicio de respaldos es uno de los servcios mas importantes en las organizaciónes en la actualidad, las empresas apuestan cada vez por más procesos y servicios digitales que se vuelven indispensables para la operacion de la organizacion por ello, las vulnerabilidades y problemas pueden surgir, de manera que las copias de seguridad para restaurar lo que necesitemos son una parte fundamental de los planes de contingencia de cualquier organizacion.
+
+El software de resplados utilizado es IBM Spectrum Protect™ que proporciona una amplia protección de datos para servidores físicos, así como entornos virtuales y una diversa gama de aplicaciones aunque este es un portente sofware para resplados la falta de optimizacion y los encolamientos de tareas de respaldos por el uso de recursos es una problema recuerrente, pues a medida que pasa el tiempo los datos respaldados van creciendo cada dia mas. Uno de los desafios como administradores de respaldos es analizar los datos de los respaldos ejecutados y en base a ellos lograr optimizar la malla de resplados ya sea reorganizando las ventanas o disponiendo mas infraestructura.
+
+El cliente seguros Bolivar ejecuta mas 16.000 mil respaldos al mes repaldando mas de 1 Peta bit de informacion cada mes, debido a esta cantidad de informacion y ejecuciones hace que hacer alguna clase de analisis sin las herramientas adecuadas sea dificil mantener una malla de backup estable. Actualemente se estan presentando encolamientos en distintas franjas horarias es urgente realizar un analisis sobre las ejecuciones de backup para tomar acciones y solventar el problemas actual.
+	
+## Descripción de campos y/o variables de sus df.
+
+Tipos de variables estadísticas
+
+Tenemos un total de 9 variables con las siguientes caracteristicas.
+
+SCHEDULED_START Cuantitativa continua
+Programacion del respaldo
+
+ACTUAL_START Cuantitativa continua
+Incio del respaldo
+
+DOMAIN_NAME Cualitativa nominal
+Dominio al que pertenece.
+
+
+SCHEDULE_NAME Cualitativa nominal
+Nombre del resplado.
+
+NODE_NAME Cualitativa nominal
+Nombre del nodo de conexion
+
+STATUS Cualitativa ordinal
+Estado final de respaldo.
+
+RESULT Cuantitativa discreta
+Codigo de retorno.
+
+REASON Cualitativa nominal
+Breve descripcion de la finalicion del respaldo.
+
+COMPLETED Cuantitativa continua
+Fecha y hora de finalizacion del resplado.
+
+Nuevas Variables
+
+Con el proposito de lograr identificar el tiempo de ejecucion de cada uno de los respaldos se restan dos variables SCHEDULE START y COMPLETED.
+
+Tambien se modifico la varible ACTUAL START con el fin de logra graficar la cantidad de resplados por dia esto con el fin de lograr evaluar atraves de la grafica de barras que dias en especifico esta sobre poblada de ejecuciones de respaldos.
+
+
+
+profundización sobre las hipótesis y como a través del tratamiento de los datos pudieron llegar a resolver esas afirmaciones
+
+Hipotesis: La malla de resplados tiende a fallar mas de lo habitual cuando hay una mayor ejecucion de backups en la misma ventana de tiempo.
+
+Lo primero que debemos analizar es ver si realmente hay diferencias en tre las ejecuciones de backup entre los dias, esto lo haremos mediante un histograma que contara la cantidad de ejecucion por dias del mes de octubre.
+
+```{r}
+resumen = origen_de_datos %>% filter(str_detect(`SCHEDULE NAME`,"TRON|TERCE|"))
+resumen = resumen %>% filter(`DOMAIN NAME` == "PD_ORA")
+resumen = resumen %>% filter(!str_detect(`SCHEDULE NAME`,"ARCH"))
+resumen = resumen %>% filter(str_detect(`SCHEDULE NAME`,"_DIA_"))
+##resumen = resumen %>% dmy_hms(resumen$COMPLETED)
+##resumen = transform(resumen, COMPLETED = ymd_hms("COMPLETED"))
+start = c(resumen$`SCHEDULE START`)
+start = dmy_hms(start)
+resumen$SCHEDULE_START = c(start)
+
+com = c(resumen$COMPLETED)
+com = dmy_hms(com)
+resumen$COMPLETED_NEW = c(com)
+
+n_resumen = resumen  %>%  select(STATUS,SCHEDULE_START,ACTUAL,START,`SCHEDULE NAME`,`NODE NAME...7`,`NODE NAME...8`,`DOMAIN NAME`,`tiempo de backup`,COMPLETED_NEW)
+
+summary(n_resumen)
+
+
+# hacer un histograma en ggplot2
+ggplot(data = n_resumen,
+       mapping = aes(x = SCHEDULE_START)) +
+  geom_histogram(bins = 30)
+
+```
+	
+Principales problemas que encontraron (Limpieza de datos atípicos, imputación de información, creación de nuevas variables) todas esas situaciones les consumieron muchas horas de trabajo y si no la plasman en su informe es como si no las hubieran hecho.
+	
+Conclusiones principales de este arduo trabajo de 3 semanas con su base de datos.
+	
+Solo se reciben informes desarrollados en R Markdown en HTML y que además estén cargados en sus repositorios de GIT antes del lunes 20 de diciembre del 2021 a las 7:00 am.
+
+Recomendaciones
+
+
+	
+Hilar con sentido común y consecuente la información planteada dentro del informe, no tiene sentido colocar gráficos uno tras de otro sin un propósito o una explicación racional de porque están haciendo esos gráficos.
+	
+Básense en la lógica para poder contar su historia (Ese mismo sentido que usaron para responder el problema de los bombarderos)
+	
+Vale más un buen análisis que mil gráficas, prefiero ver pocas gráficas de gran valor que mil gráficas sin relación alguna.
+
+Para saber que estas recomendaciones y lineamientos son claros para ti, responde con una manito arriba! like
+
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
