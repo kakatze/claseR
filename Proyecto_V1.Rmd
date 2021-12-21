@@ -14,6 +14,10 @@ library(lubridate)
 library(readxl)
 origen_de_datos <- read_excel("~/Documents/Universidad/Diplomado analisis de datos/origen_de_datos.xlsx")
 View(origen_de_datos)
+
+resumen = origen_de_datos
+resumen = resumen %>% group_by(`DOMAIN NAME`,STATUS) %>% 
+    summarise(cantidad = n())
 ```
 
 ## Contexto
@@ -58,77 +62,70 @@ Breve descripcion de la finalicion del respaldo.
 COMPLETED Cuantitativa continua
 Fecha y hora de finalizacion del resplado.
 
-Nuevas Variables
+## Nuevas Variables
 
 Con el proposito de lograr identificar el tiempo de ejecucion de cada uno de los respaldos se restan dos variables SCHEDULE START y COMPLETED.
 
 Tambien se modifico la varible ACTUAL START con el fin de logra graficar la cantidad de resplados por dia esto con el fin de lograr evaluar atraves de la grafica de barras que dias en especifico esta sobre poblada de ejecuciones de respaldos.
 
+## Tratamiento de Datos.
+
+Debido a la gran cantidad de backups es importante logra focalizarnos donde se vean la mayor cantidad de backup fallidos para esto debemos graficar unicamente los backups failed por Dominio asi sabremos que dominio analizar.
+
+Para lograr vizualizar esto mucho mejor se aplicaran dos filtros importantes vamos a quitar todos los valores que contengas ARCH en la variable SCHEDULE NAME esto lo hacemmos por que son valores que no generan ningun valor para nosotros, ademas de esto vamos a excuir el estado completed de nuestra varible STATUS ya que necesitamos saber cual de nuestros dominios tiene mas fallas de backup.
 
 
-profundización sobre las hipótesis y como a través del tratamiento de los datos pudieron llegar a resolver esas afirmaciones
+```{r tabla_domain}
+resumen_dt = resumen  %>% spread(STATUS, cantidad)
+view(resumen_dt)
+```
 
-Hipotesis: La malla de resplados tiende a fallar mas de lo habitual cuando hay una mayor ejecucion de backups en la misma ventana de tiempo.
 
-Lo primero que debemos analizar es ver si realmente hay diferencias en tre las ejecuciones de backup entre los dias, esto lo haremos mediante un histograma que contara la cantidad de ejecucion por dias del mes de octubre.
+
+```{r domain, echo=FALSE}
+resumen_d = origen_de_datos %>% filter(!str_detect(`SCHEDULE NAME`,"ARCH"))
+resumen_d = resumen_d %>% filter(!str_detect(STATUS,'completed'))
+resumen_d = resumen_d %>% group_by(`DOMAIN NAME`,STATUS) %>% 
+    summarise(cantidad = n())
+
+##resumen_dt = resumen_d  %>% spread(STATUS, cantidad)
+
+
+ggplot(resumen_d, aes(x = `DOMAIN NAME`, y = cantidad, fill = STATUS)) + geom_bar(stat='identity')
+
+```
+
+
+Otro de los casos particulares y que dificulto mucho el proyecto es el cambio de variable ya que despues de varias pruebas se logro cambiar el tipo de la variable SCHEDULE START y COMPLETED que inicialmente estaban en caracter y se requerian en tipo fecha.
+
+Teniendo en cuenta que en el grafico anterior logramos identificar que el dominio que mas fallas acumula es PD_UNX, entonces vamos a crear un grafica de barras que nos permita ver el acumulado de fallas de backup y los backups completos, asi anializaremos si realmete nuestra hipotesis es cierta.
+
+Lo primero que debemos analizar es ver si realmente hay diferencias entre las ejecuciones de respaldos en los dias de la semana, esto lo haremos mediante un grafico de barras que contara la cantidad de ejecucion por dias del mes de octubre.
 
 ```{r}
-resumen = origen_de_datos %>% filter(str_detect(`SCHEDULE NAME`,"TRON|TERCE|"))
-resumen = resumen %>% filter(`DOMAIN NAME` == "PD_ORA")
-resumen = resumen %>% filter(!str_detect(`SCHEDULE NAME`,"ARCH"))
-resumen = resumen %>% filter(str_detect(`SCHEDULE NAME`,"_DIA_"))
-##resumen = resumen %>% dmy_hms(resumen$COMPLETED)
-##resumen = transform(resumen, COMPLETED = ymd_hms("COMPLETED"))
-start = c(resumen$`SCHEDULE START`)
-start = dmy_hms(start)
-resumen$SCHEDULE_START = c(start)
-
-com = c(resumen$COMPLETED)
-com = dmy_hms(com)
-resumen$COMPLETED_NEW = c(com)
-
-n_resumen = resumen  %>%  select(STATUS,SCHEDULE_START,ACTUAL,START,`SCHEDULE NAME`,`NODE NAME...7`,`NODE NAME...8`,`DOMAIN NAME`,`tiempo de backup`,COMPLETED_NEW)
-
-summary(n_resumen)
+resumen = origen_de_datos %>% filter(`DOMAIN NAME` == "PD_UNX")
 
 
-# hacer un histograma en ggplot2
-ggplot(data = n_resumen,
-       mapping = aes(x = SCHEDULE_START)) +
-  geom_histogram(bins = 30)
+resumen_actual = resumen %>% group_by(ACTUAL,STATUS) %>% 
+  summarise(cantidad = n())
+
+ggplot(resumen_actual, aes(x = ACTUAL , y = cantidad, fill = STATUS)) + geom_bar(stat='identity')
+
 
 ```
 	
 Principales problemas que encontraron (Limpieza de datos atípicos, imputación de información, creación de nuevas variables) todas esas situaciones les consumieron muchas horas de trabajo y si no la plasman en su informe es como si no las hubieran hecho.
+
+Para lograr tratar estos datos especificamente las variables de SCHEDULE START y COMPLETED se tomaron cada una de las variables y se tranformo mediante la libreria lubridate que nos permite cambia las variables de tipo caracter a fecha, una vez fectuada la conversion se debio insertar los nuevos datos a nuestro df; esta conversion fue una de las dificiles de hacer ya que los caracteres debian coincidir con el tipo de fecha.
+
+El desconcimiento del alcance de este lenguaje de programacion tambien fue una de las mayores dificultades ya que muchas de las ideas que se querian hacer no se lograron debido a que no sabia como hacerlo.
+
+## Conclusiones
+
+Una de nuestras hipotesis era si la malla de resplados tiende a fallar mas de lo habitual cuando hay una mayor ejecucion de backups en la misma ventana de tiempo, con el desarrollo de este proyecto se desmintio esto ya que los dias que mas fallaron backup no eran los dias que mas habian ejecuciones de backup por lo tanto hya factores externos que estan influyendo en las fallas de backup.
+
 	
-Conclusiones principales de este arduo trabajo de 3 semanas con su base de datos.
-	
-Solo se reciben informes desarrollados en R Markdown en HTML y que además estén cargados en sus repositorios de GIT antes del lunes 20 de diciembre del 2021 a las 7:00 am.
-
-Recomendaciones
-
-
-	
-Hilar con sentido común y consecuente la información planteada dentro del informe, no tiene sentido colocar gráficos uno tras de otro sin un propósito o una explicación racional de porque están haciendo esos gráficos.
-	
-Básense en la lógica para poder contar su historia (Ese mismo sentido que usaron para responder el problema de los bombarderos)
-	
-Vale más un buen análisis que mil gráficas, prefiero ver pocas gráficas de gran valor que mil gráficas sin relación alguna.
-
-Para saber que estas recomendaciones y lineamientos son claros para ti, responde con una manito arriba! like
 
 
 
-```{r cars}
-summary(cars)
-```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

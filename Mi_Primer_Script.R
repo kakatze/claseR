@@ -6,10 +6,18 @@ columnas = names(origen_de_datos)
 summary(origen_de_datos)
 
 
-resumen = origen_de_datos %>% filter(str_detect(`SCHEDULE NAME`,"TRON|TERCE|"))
-resumen = resumen %>% filter(`DOMAIN NAME` == "PD_ORA")
-resumen = resumen %>% filter(!str_detect(`SCHEDULE NAME`,"ARCH"))
-resumen = resumen %>% filter(str_detect(`SCHEDULE NAME`,"_DIA_"))
+resumen_d = origen_de_datos %>% filter(!str_detect(`SCHEDULE NAME`,"ARCH"))
+resumen_d = resumen_d %>% filter(!str_detect(STATUS,'completed'))
+resumen_d = resumen_d %>% group_by(`DOMAIN NAME`,STATUS) %>% 
+    summarise(cantidad = n())
+
+##resumen_dt = resumen_d  %>% spread(STATUS, cantidad)
+
+
+ggplot(resumen_d, aes(x = `DOMAIN NAME`, y = cantidad, fill = STATUS)) + geom_bar(stat='identity')
+
+
+resumen = origen_de_datos %>% filter(`DOMAIN NAME` == "PD_ORA")
 ##resumen = resumen %>% dmy_hms(resumen$COMPLETED)
 ##resumen = transform(resumen, COMPLETED = ymd_hms("COMPLETED"))
 start = c(resumen$`SCHEDULE START`)
@@ -27,6 +35,11 @@ n_resumen = resumen  %>%  select(STATUS,SCHEDULE_START,ACTUAL,START,`SCHEDULE NA
 summary(n_resumen)
 
 
+resumen_actual = resumen %>% group_by(ACTUAL,STATUS) %>% 
+  summarise(cantidad = n())
+
+ggplot(resumen_actual, aes(x = ACTUAL , y = cantidad, fill = STATUS)) + geom_bar(stat='identity')
+
 # hacer un histograma en ggplot2
 ggplot(data = n_resumen,
        mapping = aes(x = SCHEDULE_START)) +
@@ -35,3 +48,6 @@ ggplot(data = n_resumen,
 
 ggplot(data=n_resumen, aes(x=ACTUAL, y="SCHEDULE NAME")) + 
   geom_bar(stat="identity", position="stack")
+
+
+
