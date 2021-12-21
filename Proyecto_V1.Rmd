@@ -64,9 +64,9 @@ Fecha y hora de finalizacion del resplado.
 
 ## Nuevas Variables
 
-Con el proposito de lograr identificar el tiempo de ejecucion de cada uno de los respaldos se restan dos variables SCHEDULE START y COMPLETED.
+Con el proposito de lograr identificar el tiempo de ejecucion de cada uno de los respaldos se restan dos variables **SCHEDULE START** y **COMPLETED**.
 
-Tambien se modifico la varible ACTUAL START con el fin de logra graficar la cantidad de resplados por dia esto con el fin de lograr evaluar atraves de la grafica de barras que dias en especifico esta sobre poblada de ejecuciones de respaldos.
+Tambien se modifico la varible **ACTUAL START** con el fin de logra graficar la cantidad de resplados por dia esto con el fin de lograr evaluar atraves de la grafica de barras que dias en especifico esta sobre poblada de ejecuciones de respaldos.
 
 ## Tratamiento de Datos.
 
@@ -116,7 +116,7 @@ ggplot(resumen_actual, aes(x = ACTUAL , y = cantidad, fill = STATUS)) + geom_bar
 	
 Principales problemas que encontraron (Limpieza de datos atípicos, imputación de información, creación de nuevas variables) todas esas situaciones les consumieron muchas horas de trabajo y si no la plasman en su informe es como si no las hubieran hecho.
 
-Para lograr tratar estos datos especificamente las variables de SCHEDULE START y COMPLETED se tomaron cada una de las variables y se tranformo mediante la libreria lubridate que nos permite cambia las variables de tipo caracter a fecha, una vez fectuada la conversion se debio insertar los nuevos datos a nuestro df; esta conversion fue una de las dificiles de hacer ya que los caracteres debian coincidir con el tipo de fecha.
+Para lograr tratar estos datos especificamente las variables de **SCHEDULE START** y **COMPLETED** se tomaron cada una de las variables y se tranformo mediante la libreria lubridate que nos permite cambia las variables de tipo caracter a fecha, una vez fectuada la conversion se debio insertar los nuevos datos a nuestro df; esta conversion fue una de las dificiles de hacer ya que los caracteres debian coincidir con el tipo de fecha.
 
 El desconcimiento del alcance de este lenguaje de programacion tambien fue una de las mayores dificultades ya que muchas de las ideas que se querian hacer no se lograron debido a que no sabia como hacerlo.
 
